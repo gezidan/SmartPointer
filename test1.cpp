@@ -5,6 +5,7 @@
 #include <memory>
 #if MySP
 #include "smart_ptr.h"
+using namespace smart_ptr;
 #endif
 
 class CBase

@@ -4,6 +4,8 @@
 #include <algorithm>
 #include "smart_ptr.h"
 
+using namespace smart_ptr;
+
 //  The application will produce a series of
 //  objects of type Foo which later must be
 //  accessed both by occurrence (std::vector)

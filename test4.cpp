@@ -1,6 +1,7 @@
 //  smart pointer test program  ----------------------------------------------//
 
 #include "smart_ptr.h"
+using namespace smart_ptr;
 
 #if defined(_MSC_VER)
 
@@ -145,6 +146,16 @@ void test()
     ASSERT( sup2.use_count() == 2 );
     strong_ptr<UDT> spRecover(wpUdt.lock());
     ASSERT( sup2.use_count() == 3 );
+
+    spRecover->value(6666);
+
+    {
+        strong_ptr<UDT> sp5 = make_strong_ptr<UDT>(786);
+        std::cout << sp5->value() << std::endl;
+    }
+
+    strong_ptr<int> sp6 = make_strong_ptr<int>(341);
+    std::cout << *sp6 << std::endl;
 
     std::cout << "OK\n";
 

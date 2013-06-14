@@ -5,6 +5,8 @@
 #include <string>
 #include "smart_ptr.h"
 
+using namespace smart_ptr;
+
 // X.hpp:
 
 class X
@@ -61,7 +63,7 @@ strong_ptr<X> createX()
 
 int main(void)
 {
-    std::string key = "sfdafafd";
+    std::string key = "key-string";
     strong_ptr<X> sp = createX();
     //sp->f();
     //sp->g();

@@ -10,8 +10,6 @@
 
 namespace smart_ptr {
 
-}; // namespace smart_ptr
-
 class ref_count
 {
 public:
@@ -180,8 +178,14 @@ protected:
     }
 
     template<class Y, bool b> friend class base_ptr;
-    template<class Y, bool b> friend class base_ptr;
 };
+
+template<class X, bool bx, class Y, bool by>
+bool operator<(const base_ptr<X, bx> &lhs, const base_ptr<Y, by> &rhs)
+{
+    // test if left pointer < right pointer
+    return lhs.get() < rhs.get();
+}
 
 template <class X> class weak_ptr;
 
@@ -224,14 +228,6 @@ public:
         return *this;
     }
 };
-
-
-template<class _Ty1, class _Ty2>
-bool operator<(const strong_ptr<_Ty1> &lhs, const strong_ptr<_Ty2> &rhs)
-{
-    // test if base_ptr < base_ptr
-    return lhs.get() < rhs.get();
-}
 
 
 template <class X> class weak_ptr : public base_ptr<X, false>
@@ -295,13 +291,49 @@ public:
     }
 };
 
-template<class _Ty1, class _Ty2>
-bool operator<(const weak_ptr<_Ty1> &lhs, const weak_ptr<_Ty2> &rhs)
+template <typename T>
+strong_ptr<T> make_strong_ptr(void)
 {
-    // test if base_ptr < base_ptr
-    return lhs.get() < rhs.get();
+    return strong_ptr<T> ( new T() );
 }
 
+template <typename T, typename A1>
+strong_ptr<T> make_strong_ptr(A1 &&a1)
+{
+    return strong_ptr<T> ( new T(a1) );
+}
+
+template <typename T, typename A1, typename A2>
+strong_ptr<T> make_strong_ptr(A1 &&a1, A2 &&a2)
+{
+    return strong_ptr<T> ( new T(a1, a2) );
+}
+
+template <typename T, typename A1, typename A2, typename A3>
+strong_ptr<T> make_strong_ptr(A1 &&a1, A2 &&a2, A3 &&a3)
+{
+    return strong_ptr<T> ( new T(a1, a2, a3) );
+}
+
+template <typename T, typename A1, typename A2, typename A3, typename A4>
+strong_ptr<T> make_strong_ptr(A1 &&a1, A2 &&a2, A3 &&a3, A4 &&a4)
+{
+    return strong_ptr<T> ( new T(a1, a2, a3, a4) );
+}
+
+template <typename T, typename A1, typename A2, typename A3, typename A4, typename A5>
+strong_ptr<T> make_strong_ptr(A1 &&a1, A2 &&a2, A3 &&a3, A4 &&a4, A5 &&a5)
+{
+    return strong_ptr<T> ( new T(a1, a2, a3, a4, a5) );
+}
+
+template <typename T, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6>
+strong_ptr<T> make_strong_ptr(A1 &&a1, A2 &&a2, A3 &&a3, A4 &&a4, A5 &&a5, A6 &&a6)
+{
+    return strong_ptr<T> ( new T(a1, a2, a3, a4, a5, a6) );
+}
+
+}; // namespace smart_ptr
 
 
 #endif // __SMART_PTR_H__
