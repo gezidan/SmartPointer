@@ -37,10 +37,16 @@ public:
 private:
 };
 
-//std::shared_ptr;
-//std::weak_ptr;
 
-int main(void)
+#ifndef CDECL
+#if defined(WIN32)
+#define CDECL           _cdecl
+#else
+#define CDECL 
+#endif // defined(WIN32)
+#endif // !CDECL
+
+int CDECL main(void)
 {
     strong_ptr<CBase> spBase(new CDevide());
 

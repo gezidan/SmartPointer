@@ -332,37 +332,37 @@ strong_ptr<T> make_strong_ptr(void)
 }
 
 template <typename T, typename A1>
-strong_ptr<T> make_strong_ptr(A1 &&a1)
+strong_ptr<T> make_strong_ptr(A1 const &a1)
 {
     return strong_ptr<T> ( new T(a1) );
 }
 
 template <typename T, typename A1, typename A2>
-strong_ptr<T> make_strong_ptr(A1 &&a1, A2 &&a2)
+strong_ptr<T> make_strong_ptr(A1 const &a1, A2 const &a2)
 {
     return strong_ptr<T> ( new T(a1, a2) );
 }
 
 template <typename T, typename A1, typename A2, typename A3>
-strong_ptr<T> make_strong_ptr(A1 &&a1, A2 &&a2, A3 &&a3)
+strong_ptr<T> make_strong_ptr(A1 const &a1, A2 const &a2, A3 const &a3)
 {
     return strong_ptr<T> ( new T(a1, a2, a3) );
 }
 
 template <typename T, typename A1, typename A2, typename A3, typename A4>
-strong_ptr<T> make_strong_ptr(A1 &&a1, A2 &&a2, A3 &&a3, A4 &&a4)
+strong_ptr<T> make_strong_ptr(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4)
 {
     return strong_ptr<T> ( new T(a1, a2, a3, a4) );
 }
 
 template <typename T, typename A1, typename A2, typename A3, typename A4, typename A5>
-strong_ptr<T> make_strong_ptr(A1 &&a1, A2 &&a2, A3 &&a3, A4 &&a4, A5 &&a5)
+strong_ptr<T> make_strong_ptr(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4, A5 const &a5)
 {
     return strong_ptr<T> ( new T(a1, a2, a3, a4, a5) );
 }
 
 template <typename T, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6>
-strong_ptr<T> make_strong_ptr(A1 &&a1, A2 &&a2, A3 &&a3, A4 &&a4, A5 &&a5, A6 &&a6)
+strong_ptr<T> make_strong_ptr(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4, A5 const &a5, A6 const &a6)
 {
     return strong_ptr<T> ( new T(a1, a2, a3, a4, a5, a6) );
 }

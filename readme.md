@@ -33,3 +33,35 @@ _Ralph Shane_ (free2000fly at gmail dot com)
     (4) 在 `base_ptr` 對象析搆時，調用最關鍵的 `release` 函數。`release` 函數針對自身 `base_ptr` 對象是強指針還是弱指針決定“強”引用計數或“弱”引用計數的自減。當“強”引用計數為 0 時，釋放（delete）持有的物件。繼續下一步的判斷，當“強”引用計數和“弱”引用計數都為 0 時，釋放（delete）`ref_count` 對象實體指針 `m_counter`。然後將 raw 物件指針 `m_ptr` 和 `m_counter` 變量歸零。
 
 3.  `strong_ptr` 類基本上就是轉發 `base_ptr` 基類的操作。`weak_ptr` 類與 `strong_ptr` 類似，主要不同點就是將對 raw 物件指針的直接操作屏蔽掉。
+
+
+
+測試平臺
+==========================
+
+通過 
+
+    Visual Studio 2003/2005/2008/2010/2012
+
+未通過
+    
+    Visual Studio 6
+
+
+除了 vs2010/vs2012 外，其它編譯器不支持形如
+
+    template <typename T, typename A1>
+    strong_ptr<T> make_strong_ptr(A1 &&a1)
+    {
+        return strong_ptr<T> ( new T(a1) );
+    }
+
+的語法，被迫改成形如以下的樣子，這樣一來就不再支持常數傳入參數
+
+    template <typename T, typename A1>
+    strong_ptr<T> make_strong_ptr(A1 const &a1)
+    {
+        return strong_ptr<T> ( new T(a1) );
+    }
+
+

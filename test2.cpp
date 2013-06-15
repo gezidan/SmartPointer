@@ -61,7 +61,15 @@ strong_ptr<X> createX()
     return px;
 }
 
-int main(void)
+#ifndef CDECL
+#if defined(WIN32)
+#define CDECL           _cdecl
+#else
+#define CDECL 
+#endif // defined(WIN32)
+#endif // !CDECL
+
+int CDECL main(void)
 {
     std::string key = "key-string";
     strong_ptr<X> sp = createX();
@@ -69,9 +77,13 @@ int main(void)
     std::map<std::string, strong_ptr<X> > mapSp;
     mapSp[key] = sp;
 
-    strong_ptr<X> &sp2 = mapSp.at(key);
-    if (sp2) {
-        sp2->f();
+    std::map<std::string, strong_ptr<X> >::iterator it;
+    it = mapSp.find(key);
+    if (it != mapSp.end()) {
+        strong_ptr<X> &sp2 = it->second;
+        if (sp2) {
+            sp2->f();
+        }
     }
 
     std::set<strong_ptr<X> > setSp;

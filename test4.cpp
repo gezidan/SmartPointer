@@ -146,12 +146,14 @@ void test()
 
     spRecover->value(6666);
 
+    int dummy = 786;
     {
-        strong_ptr<UDT> sp5 = make_strong_ptr<UDT>(786);
+        strong_ptr<UDT> sp5 = make_strong_ptr<UDT>(dummy);
         std::cout << sp5->value() << std::endl;
     }
 
-    strong_ptr<int> sp6 = make_strong_ptr<int>(341);
+    dummy = 341;
+    strong_ptr<int> sp6 = make_strong_ptr<int>(dummy);
     std::cout << *sp6 << std::endl;
 
     std::cout << "OK\n";
@@ -183,8 +185,17 @@ void test2(void)
     }
 }
 
-int main()
+#ifndef CDECL
+#if defined(WIN32)
+#define CDECL           _cdecl
+#else
+#define CDECL 
+#endif // defined(WIN32)
+#endif // !CDECL
+
+int CDECL main()
 {
     test();
     test2();
+    return 0;
 }

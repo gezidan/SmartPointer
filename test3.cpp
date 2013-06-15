@@ -29,7 +29,15 @@ struct FooPtrOps
     { std::cout << a->x << "\n"; }
 };
 
-int main()
+#ifndef CDECL
+#if defined(WIN32)
+#define CDECL           _cdecl
+#else
+#define CDECL 
+#endif // defined(WIN32)
+#endif // !CDECL
+
+int CDECL main()
 {
     std::vector<FooPtr>         foo_vector;
     std::set<FooPtr,FooPtrOps>  foo_set; // NOT multiset!
