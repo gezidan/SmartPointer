@@ -1,4 +1,4 @@
-﻿輕量級基於引用計數的智能指針
+﻿輕量級基於引用計數的智能指針(Smart Pointer)
 ==========================
 
 _Ralph Shane_ (free2000fly at gmail dot com)
