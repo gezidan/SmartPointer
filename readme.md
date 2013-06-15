@@ -1,11 +1,11 @@
-﻿輕量級智能指針類
+﻿輕量級基於引用計數的智能指針
 ==========================
 
 _Ralph Shane_ (free2000fly at gmail dot com)
 
 [Smart Pointer](https://github.com/free2000fly/SmartPointer)
 
-包含兩個指針: 強指針 和 弱指針。
+包含兩种指針: 強指針 strong_ptr 和 弱指針 weak_ptr。基本上可以替換 std::shared_ptr 和 std::weak_ptr.
 
 強指針對象持有物件的指針並增加“強”引用計數；當強指針對象析搆時，“強”引用計數自減；當“強”引用計數自減到 0 時，強指針對象釋放物件實體。
 
@@ -27,4 +27,4 @@ _Ralph Shane_ (free2000fly at gmail dot com)
 
     (4) 在 `base_ptr` 對象析搆時，調用最關鍵的 `release` 函數。`release` 函數針對自身 `base_ptr` 對象是強指針還是弱指針決定“強”引用計數或“弱”引用計數的自減。當“強”引用計數為 0 時，釋放（delete）持有的物件。繼續下一步的判斷，當“強”引用計數和“弱”引用計數都為 0 時，釋放（delete）`ref_count` 對象實體指針 `m_counter`。然後將 raw 物件指針 `m_ptr` 和 `m_counter` 變量歸零。
 
-3.  `strong_ptr` 類基本上就是轉發 `base_ptr` 基類的操作。`weak_ptr` 類與 `strong_ptr` 類似，就是將對 raw 物件指針的直接操作屏蔽掉。
+3.  `strong_ptr` 類基本上就是轉發 `base_ptr` 基類的操作。`weak_ptr` 類與 `strong_ptr` 類似，主要不同點就是將對 raw 物件指針的直接操作屏蔽掉。
