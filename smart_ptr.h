@@ -91,12 +91,12 @@ public:
         }
     }
 
-    base_ptr(const base_ptr& rhs)
+    base_ptr(const base_ptr& rhs) : m_counter(0), m_ptr(0)
     {
         acquire(rhs);
     }
 
-    template<class Y, bool b> base_ptr(const base_ptr<Y, b> &rhs)
+    template<class Y, bool b> base_ptr(const base_ptr<Y, b> &rhs) : m_counter(0), m_ptr(0)
     {
         acquire(rhs);
     }
@@ -170,8 +170,8 @@ protected:
 
     template <class Y, bool b> void acquire(const base_ptr<Y, b> & rhs) throw()
     {
-        m_counter = rhs.m_counter;
-        if (m_counter) {
+        if (rhs.m_counter && rhs.m_counter->get_ref_count()) {
+            m_counter = rhs.m_counter;
             if (isStrong) {
                 m_counter->inc_ref();
             } else {
