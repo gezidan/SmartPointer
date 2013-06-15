@@ -20,8 +20,11 @@ _Ralph Shane_ (free2000fly at gmail dot com)
 2.  基類 `base_ptr` 實現了強指針和弱指針的絕大部分邏輯，這個類是強指針和弱指針共同的基類。有兩個成員變量，`ref_count` 對象實體指針 `m_counter` 和 raw 物件指針。這個類的關鍵點有四: 
 
     (1) 在非零的 raw 物件指針傳入到構造函數時，持有該指針，並創建 `ref_count` 對象實體指針 `m_counter` 成員變量，此時“強”引用計數為 1，而“弱”引用計數為 0。
+
     (2) 在“拷貝構造函數”的參數裏傳入強指針或弱指針對象時，調用 `acquire` 函數。
+
     (3) `acquire` 函數裏完成兩件事: 持有傳入的 `ref_count` 對象指針，增加“強”引用計數或“弱”引用計數；持有傳入的 raw 物件指針。
+
     (4) 在 `base_ptr` 對象析搆時，調用最關鍵的 `release` 函數。`release` 函數針對自身 `base_ptr` 對象是強指針還是弱指針決定“強”引用計數或“弱”引用計數的自減。當“強”引用計數為 0 時，釋放（delete）持有的物件。繼續下一步的判斷，當“強”引用計數和“弱”引用計數都為 0 時，釋放（delete）ref_count 對象實體指針 m_counter。然後將 raw 物件指針 m_ptr 和 m_counter 變量歸零。
 
 3.  `strong_ptr` 類基本上就是轉發 `base_ptr` 基類的操作。`weak_ptr` 類與 `strong_ptr` 類似，就是將對 raw 物件指針的直接操作屏蔽掉。
