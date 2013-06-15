@@ -117,9 +117,6 @@ void test()
     ASSERT( scp.find(cp4) != scp.end() );
     ASSERT( scp.find(cp4) == scp.find( strong_ptr<int>(cp4) ) );
 
-    //  test shared_array with a built-in type
-    char * cap = new char [ 100 ];
-
     ASSERT( UDT_use_count == 0 );  // reality check
 
     //  test shared_ptr with a user defined type

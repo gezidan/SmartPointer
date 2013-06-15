@@ -91,11 +91,22 @@ public:
         }
     }
 
+    base_ptr(const base_ptr& rhs)
+    {
+        acquire(rhs);
+    }
+
+    template<class Y, bool b> base_ptr(const base_ptr<Y, b> &rhs)
+    {
+        acquire(rhs);
+    }
+
     virtual ~base_ptr()
     {
         release();
     }
 
+    operator X*()   const throw()   { return m_ptr; }
     X& operator*()  const throw()   { return *m_ptr; }
     X* operator->() const throw()   { return m_ptr; }
     X* get()        const throw()   { return m_ptr; }
@@ -133,6 +144,18 @@ public:
         private_swap(m_ptr, rhs.m_ptr);
     }
 
+    base_ptr& operator=(const base_ptr &rhs)
+    {
+        reset(rhs);
+        return *this;
+    }
+
+    template <class Y, bool b> base_ptr& operator=(const base_ptr<Y, b> &rhs)
+    {
+        reset(rhs);
+        return *this;
+    }
+
 protected:
     ref_count *m_counter;
     X * m_ptr;
@@ -145,16 +168,16 @@ protected:
         obj2 = static_cast<TP2>(tmp);
     }
 
-    template <class Y, bool b> void acquire(const base_ptr<Y, b> & c) throw()
+    template <class Y, bool b> void acquire(const base_ptr<Y, b> & rhs) throw()
     {
-        m_ptr = static_cast<X*>(c.m_ptr);
-        m_counter = c.m_counter;
+        m_counter = rhs.m_counter;
         if (m_counter) {
             if (isStrong) {
                 m_counter->inc_ref();
             } else {
                 m_counter->inc_weak_ref();
             }
+            m_ptr = static_cast<X*>(rhs.m_ptr);
         }
     }
 
@@ -172,8 +195,11 @@ protected:
             }
             if (0 == m_counter->get_ref_count() && 0==m_counter->get_weak_ref_count()) {
                 delete m_counter;
-                m_counter = 0;
             }
+            m_counter = 0;
+        }
+        if (m_ptr) {
+            m_ptr = 0;
         }
     }
 
@@ -191,40 +217,44 @@ template <class X> class weak_ptr;
 
 template <class X> class strong_ptr : public base_ptr<X, true>
 {
+    typedef base_ptr<X, true> baseClass;
 public:
-    explicit strong_ptr(X* p = 0) : base_ptr(p)
+    explicit strong_ptr(X* p = 0) : baseClass(p)
     {
     }
 
-    strong_ptr(const strong_ptr& r)
+    strong_ptr(const strong_ptr& rhs) : baseClass(rhs)
     {
-        acquire(r);
     }
 
-    template<class Y> strong_ptr(const strong_ptr<Y> &rhs)
+    template<class Y> strong_ptr(const strong_ptr<Y> &rhs) : baseClass(rhs)
     {
-        acquire(rhs);
     }
 
-     // construct strong_ptr object that owns resource *rhs
-     template<class Y> explicit strong_ptr(const weak_ptr<Y> &rhs)
-     {
-         acquire(rhs);
-     }
+    // construct strong_ptr object that owns resource *rhs
+    template<class Y> explicit strong_ptr(const weak_ptr<Y> &rhs) : baseClass(rhs)
+    {
+    }
 
     ~strong_ptr()
     {
     }
 
-    strong_ptr& operator=(const strong_ptr& rhs)
+    strong_ptr& operator=(const strong_ptr &rhs)
     {
-        reset(rhs);
+        baseClass::operator = (rhs);
         return *this;
     }
 
-    template <class Y> strong_ptr& operator=(const strong_ptr<Y>& rhs)
+    template <class Y> strong_ptr& operator=(const strong_ptr<Y> &rhs)
     {
-        reset(rhs);
+        baseClass::operator = (rhs);
+        return *this;
+    }
+
+    template <class Y> strong_ptr& operator=(const weak_ptr<Y> &rhs)
+    {
+        baseClass::operator = (rhs);
         return *this;
     }
 };
@@ -232,6 +262,7 @@ public:
 
 template <class X> class weak_ptr : public base_ptr<X, false>
 {
+    typedef base_ptr<X, false> baseClass;
 public:
     // construct empty weak_ptr object
     weak_ptr()
@@ -239,21 +270,18 @@ public:
     }
 
     // construct weak_ptr object for resource owned by rhs
-    template<class Y> weak_ptr(const strong_ptr<Y> &rhs)
+    template<class Y> weak_ptr(const strong_ptr<Y> &rhs) : baseClass(rhs)
     {
-        acquire(rhs);
     }
 
     // construct weak_ptr object for resource pointed to by rhs
-    weak_ptr(const weak_ptr &rhs)
+    weak_ptr(const weak_ptr &rhs) : baseClass(rhs)
     {
-        acquire(rhs);
     }
 
     // construct weak_ptr object for resource pointed to by rhs
-    template<class Y> weak_ptr(const weak_ptr<Y> &rhs)
+    template<class Y> weak_ptr(const weak_ptr<Y> &rhs) : baseClass(rhs)
     {
-        acquire(rhs);
     }
 
     ~weak_ptr()
@@ -262,19 +290,19 @@ public:
 
     weak_ptr& operator=(const weak_ptr &rhs)
     {
-        reset(rhs)
+        baseClass::operator =(rhs);
         return *this;
     }
 
-    template <class Y> weak_ptr& operator=(const weak_ptr<Y>& rhs)
+    template <class Y> weak_ptr& operator=(const weak_ptr<Y> &rhs)
     {
-        reset(rhs);
+        baseClass::operator = (rhs);
         return *this;
     }
 
-    template<class Y> weak_ptr& operator=(const strong_ptr<Y> &rhs)
+    template <class Y> weak_ptr& operator=(const strong_ptr<Y> &rhs)
     {
-        reset(rhs);
+        baseClass::operator = (rhs);
         return *this;
     }
 
@@ -289,6 +317,12 @@ public:
     {
         return strong_ptr<X>(*this);
     }
+
+private:
+    operator X*()   const throw();
+    X& operator*()  const throw();
+    X* operator->() const throw();
+    X* get()        const throw();
 };
 
 template <typename T>

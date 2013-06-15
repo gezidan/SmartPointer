@@ -65,13 +65,14 @@ int main(void)
 {
     std::string key = "key-string";
     strong_ptr<X> sp = createX();
-    //sp->f();
-    //sp->g();
 
     std::map<std::string, strong_ptr<X> > mapSp;
     mapSp[key] = sp;
 
-    mapSp.at(key)->f();
+    strong_ptr<X> &sp2 = mapSp.at(key);
+    if (sp2) {
+        sp2->f();
+    }
 
     std::set<strong_ptr<X> > setSp;
     setSp.insert(sp);
