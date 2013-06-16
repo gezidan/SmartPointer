@@ -56,7 +56,7 @@ _Ralph Shane_ (free2000fly at gmail dot com)
         return strong_ptr<T> ( new T(a1) );
     }
 
-的語法，被迫改成形如以下的樣子，這樣一來就不再支持常數傳入參數
+的語法，被迫改成形如以下的樣子，這樣一來函數 `make_strong_ptr` 就不再支持常數形式的傳入參數
 
     template <typename T, typename A1>
     strong_ptr<T> make_strong_ptr(A1 const &a1)
