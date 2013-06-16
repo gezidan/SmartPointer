@@ -35,18 +35,8 @@ _Ralph Shane_ (free2000fly at gmail dot com)
 3.  `strong_ptr` 類基本上就是轉發 `base_ptr` 基類的操作。`weak_ptr` 類與 `strong_ptr` 類似，主要不同點就是將對 raw 物件指針的直接操作屏蔽掉。
 
 
-
-測試平臺
+關於 `make_strong_ptr` 函數
 ==========================
-
-通過 
-
-    Visual Studio 2003/2005/2008/2010/2012
-
-未通過
-    
-    Visual Studio 6
-
 
 除了 vs2010/vs2012 外，其它編譯器不支持形如
 
@@ -64,4 +54,15 @@ _Ralph Shane_ (free2000fly at gmail dot com)
         return strong_ptr<T> ( new T(a1) );
     }
 
+
+測試平臺
+==========================
+
+通過 
+
+    Visual Studio 2003/2005/2008/2010/2012
+
+未通過
+    
+    Visual Studio 6
 
