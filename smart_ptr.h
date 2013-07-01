@@ -1,6 +1,8 @@
 /*
 * strong_ptr - simple reference counted pointer.
-*
+* 
+* Copyright (c) 2013, Ralph Shane <free2000fly at gmail dot com>
+* 
 * The is a non-intrusive implementation that allocates an additional
 * int and pointer for every counted object.
 */
