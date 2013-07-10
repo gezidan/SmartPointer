@@ -185,6 +185,15 @@ void test2(void)
     }
 }
 
+void test4(void)
+{
+    strong_array<int> sa1(new int[8]);
+    sa1[0] = 30;
+    sa1[4] = 7;
+    strong_array<UDT> sa2(new UDT[8]);
+}
+
+
 #ifndef CDECL
 #if defined(WIN32)
 #define CDECL           _cdecl
@@ -197,5 +206,6 @@ int CDECL main()
 {
     test();
     test2();
+    test4();
     return 0;
 }
