@@ -79,14 +79,14 @@ private:
 
 
 // base class for strong_ptr and weak_ptr
-template<class X, bool isStrong, typename mem_mgr>
+template<class T, bool is_strong, typename mem_mgr>
 class base_ptr
 {
 public:
-    base_ptr(X *p=0) : m_counter(0), m_ptr(p)
+    explicit base_ptr(T *p=0) : m_counter(0), m_ptr(p)
     {
         if (m_ptr) {
-            if (isStrong) {
+            if (is_strong) {
                 // allocate a new ref_count
                 m_counter = new ref_count;
             }
@@ -98,7 +98,8 @@ public:
         acquire(rhs);
     }
 
-    template<class Y, bool b, typename mem_mgr2> base_ptr(const base_ptr<Y, b, mem_mgr2> &rhs) : m_counter(0), m_ptr(0)
+    template<class Q, bool b, typename mem_mgr2> 
+    base_ptr(const base_ptr<Q, b, mem_mgr2> &rhs) : m_counter(0), m_ptr(0)
     {
         acquire(rhs);
     }
@@ -108,21 +109,22 @@ public:
         release();
     }
 
-    operator X*()   const throw()   { return m_ptr; }
-    X& operator*()  const throw()   { return *m_ptr; }
-    X* operator->() const throw()   { return m_ptr; }
-    X* get()        const throw()   { return m_ptr; }
+    operator T*()   const throw()   { return m_ptr; }
+    T& operator*()  const throw()   { return *m_ptr; }
+    T* operator->() const throw()   { return m_ptr; }
+    T* get()        const throw()   { return m_ptr; }
 
     bool unique() const throw()
     { return (m_counter ? (1 == m_counter->get_ref_count()) : true); }
 
-    void reset(X *p=0)
+    void reset(T *p=0)
     {
-        base_ptr<X, isStrong, mem_mgr> ptr(p);
+        base_ptr<T, is_strong, mem_mgr> ptr(p);
         reset(ptr);
     }
 
-    template <class Y, bool b, typename mem_mgr2> void reset(const base_ptr<Y, b, mem_mgr2> &rhs)
+    template <class Q, bool b, typename mem_mgr2> 
+    void reset(const base_ptr<Q, b, mem_mgr2> &rhs)
     {
         if ((void *)this != (void *)&rhs) {
             release();
@@ -140,7 +142,8 @@ public:
     }
 
     // swap pointers
-    template <class Y, bool b, typename mem_mgr2> void swap(base_ptr<Y, b, mem_mgr2> & rhs)
+    template <class Q, bool b, typename mem_mgr2>
+    void swap(base_ptr<Q, b, mem_mgr2> & rhs)
     {
         private_swap(m_counter, rhs.m_counter);
         private_swap(m_ptr, rhs.m_ptr);
@@ -152,7 +155,8 @@ public:
         return *this;
     }
 
-    template <class Y, bool b, typename mem_mgr2> base_ptr& operator=(const base_ptr<Y, b, mem_mgr2> &rhs)
+    template <class Q, bool b, typename mem_mgr2>
+    base_ptr& operator=(const base_ptr<Q, b, mem_mgr2> &rhs)
     {
         reset(rhs);
         return *this;
@@ -160,7 +164,7 @@ public:
 
 protected:
     ref_count *m_counter;
-    X * m_ptr;
+    T * m_ptr;
 
     template <typename TP1, typename TP2>
     static void private_swap(TP1 &obj1, TP2 &obj2)
@@ -170,16 +174,17 @@ protected:
         obj2 = static_cast<TP2>(tmp);
     }
 
-    template <class Y, bool b, typename mem_mgr2> void acquire(const base_ptr<Y, b, mem_mgr2> & rhs) throw()
+    template <class Q, bool b, typename mem_mgr2>
+    void acquire(const base_ptr<Q, b, mem_mgr2> & rhs) throw()
     {
         if (rhs.m_counter && rhs.m_counter->get_ref_count()) {
             m_counter = rhs.m_counter;
-            if (isStrong) {
+            if (is_strong) {
                 m_counter->inc_ref();
             } else {
                 m_counter->inc_weak_ref();
             }
-            m_ptr = static_cast<X*>(rhs.m_ptr);
+            m_ptr = static_cast<T*>(rhs.m_ptr);
         }
     }
 
@@ -187,7 +192,7 @@ protected:
     void release(void)
     {
         if (m_counter) {
-            if (isStrong) {
+            if (is_strong) {
                 if (0 == m_counter->dec_ref()) {
                     mem_mgr::deallocate(m_ptr);
                     m_ptr = 0;
@@ -205,36 +210,37 @@ protected:
         }
     }
 
-    template<class Y, bool b, typename mem_mgr2> friend class base_ptr;
+    template<class Q, bool b, typename mem_mgr2> friend class base_ptr;
 };
 
-template<class X, bool bx, class Y, bool by, typename mem_mgr1, typename mem_mgr2>
-bool operator<(const base_ptr<X, bx, mem_mgr1> &lhs, const base_ptr<Y, by, mem_mgr2> &rhs)
+template<class T, bool bx, class Q, bool by, typename mem_mgr1, typename mem_mgr2>
+bool operator<(const base_ptr<T, bx, mem_mgr1> &lhs, const base_ptr<Q, by, mem_mgr2> &rhs)
 {
     // test if left pointer < right pointer
     return lhs.get() < rhs.get();
 }
 
-template <class X, typename mem_mgr> class weak_ptr;
+template <class T, typename mem_mgr> class weak_ptr;
 
-template<typename X>
+template<typename T>
 class cpp_mem_mgr {
 public:
-    static void deallocate(X *p) { delete p; }
-    static X * allocate(void) { return new X(); }
-    template<typename A1> static X * allocate(A1 const &a1) { return new X(a1); }
-    template<typename A1, typename A2> static X * allocate(A1 const &a1, A2 const &a2) { return new X(a1, a2); }
-    template<typename A1, typename A2, typename A3> static X * allocate(A1 const &a1, A2 const &a2, A3 const &a3) { return new X(a1, a2, a3); }
-    template<typename A1, typename A2, typename A3, typename A4> static X * allocate(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4) { return new X(a1, a2, a3, a4); }
-    template<typename A1, typename A2, typename A3, typename A4, typename A5> static X * allocate(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4, A5 const &a5) { return new X(a1, a2, a3, a4, a5); }
-    template<typename A1, typename A2, typename A3, typename A4, typename A5, typename A6> static X * allocate(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4, A5 const &a5, A6 const &a6) { return new X(a1, a2, a3, a4, a5, a6); }
+    static void deallocate(T *p) { delete p; }
+    static T * allocate(void) { return new T(); }
+    template<typename A1> static T * allocate(A1 const &a1) { return new T(a1); }
+    template<typename A1, typename A2> static T * allocate(A1 const &a1, A2 const &a2) { return new T(a1, a2); }
+    template<typename A1, typename A2, typename A3> static T * allocate(A1 const &a1, A2 const &a2, A3 const &a3) { return new T(a1, a2, a3); }
+    template<typename A1, typename A2, typename A3, typename A4> static T * allocate(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4) { return new T(a1, a2, a3, a4); }
+    template<typename A1, typename A2, typename A3, typename A4, typename A5> static T * allocate(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4, A5 const &a5) { return new T(a1, a2, a3, a4, a5); }
+    template<typename A1, typename A2, typename A3, typename A4, typename A5, typename A6> static T * allocate(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4, A5 const &a5, A6 const &a6) { return new T(a1, a2, a3, a4, a5, a6); }
 };
 
-template <class X, typename mem_mgr=cpp_mem_mgr<X> > class strong_ptr : public base_ptr<X, true, mem_mgr>
+template <class T, typename mem_mgr=cpp_mem_mgr<T> >
+class strong_ptr : public base_ptr<T, true, mem_mgr>
 {
-    typedef base_ptr<X, true, mem_mgr> baseClass;
+    typedef base_ptr<T, true, mem_mgr> baseClass;
 public:
-    explicit strong_ptr(X* p = 0) : baseClass(p)
+    explicit strong_ptr(T* p = 0) : baseClass(p)
     {
     }
 
@@ -242,12 +248,14 @@ public:
     {
     }
 
-    template<class Y, typename mem_mgr2> strong_ptr(const strong_ptr<Y, mem_mgr2> &rhs) : baseClass(rhs)
+    template<class Q, typename mem_mgr2> 
+    strong_ptr(const strong_ptr<Q, mem_mgr2> &rhs) : baseClass(rhs)
     {
     }
 
     // construct strong_ptr object that owns resource *rhs
-    template<class Y, typename mem_mgr2> explicit strong_ptr(const weak_ptr<Y, mem_mgr2> &rhs) : baseClass(rhs)
+    template<class Q, typename mem_mgr2> 
+    explicit strong_ptr(const weak_ptr<Q, mem_mgr2> &rhs) : baseClass(rhs)
     {
     }
 
@@ -261,13 +269,15 @@ public:
         return *this;
     }
 
-    template <class Y, typename mem_mgr2> strong_ptr& operator=(const strong_ptr<Y, mem_mgr2> &rhs)
+    template <class Q, typename mem_mgr2> 
+    strong_ptr& operator=(const strong_ptr<Q, mem_mgr2> &rhs)
     {
         baseClass::operator = (rhs);
         return *this;
     }
 
-    template <class Y, typename mem_mgr2> strong_ptr& operator=(const weak_ptr<Y, mem_mgr2> &rhs)
+    template <class Q, typename mem_mgr2>
+    strong_ptr& operator=(const weak_ptr<Q, mem_mgr2> &rhs)
     {
         baseClass::operator = (rhs);
         return *this;
@@ -275,9 +285,10 @@ public:
 };
 
 
-template <class X, typename mem_mgr=cpp_mem_mgr<X> > class weak_ptr : public base_ptr<X, false, mem_mgr>
+template <class T, typename mem_mgr=cpp_mem_mgr<T> >
+class weak_ptr : public base_ptr<T, false, mem_mgr>
 {
-    typedef base_ptr<X, false, mem_mgr> baseClass;
+    typedef base_ptr<T, false, mem_mgr> baseClass;
 public:
     // construct empty weak_ptr object
     weak_ptr()
@@ -285,7 +296,8 @@ public:
     }
 
     // construct weak_ptr object for resource owned by rhs
-    template<class Y, typename mem_mgr2> weak_ptr(const strong_ptr<Y, mem_mgr2> &rhs) : baseClass(rhs)
+    template<class Q, typename mem_mgr2>
+    weak_ptr(const strong_ptr<Q, mem_mgr2> &rhs) : baseClass(rhs)
     {
     }
 
@@ -295,7 +307,8 @@ public:
     }
 
     // construct weak_ptr object for resource pointed to by rhs
-    template<class Y, typename mem_mgr2> weak_ptr(const weak_ptr<Y, mem_mgr2> &rhs) : baseClass(rhs)
+    template<class Q, typename mem_mgr2>
+    weak_ptr(const weak_ptr<Q, mem_mgr2> &rhs) : baseClass(rhs)
     {
     }
 
@@ -309,13 +322,15 @@ public:
         return *this;
     }
 
-    template <class Y, typename mem_mgr2> weak_ptr& operator=(const weak_ptr<Y, mem_mgr2> &rhs)
+    template <class Q, typename mem_mgr2>
+    weak_ptr& operator=(const weak_ptr<Q, mem_mgr2> &rhs)
     {
         baseClass::operator = (rhs);
         return *this;
     }
 
-    template <class Y, typename mem_mgr2> weak_ptr& operator=(const strong_ptr<Y, mem_mgr2> &rhs)
+    template <class Q, typename mem_mgr2>
+    weak_ptr& operator=(const strong_ptr<Q, mem_mgr2> &rhs)
     {
         baseClass::operator = (rhs);
         return *this;
@@ -328,79 +343,111 @@ public:
     }
 
     // convert to strong_ptr
-    strong_ptr<X, mem_mgr> lock() const
+    strong_ptr<T, mem_mgr> lock() const
     {
-        return strong_ptr<X, mem_mgr>(*this);
+        return strong_ptr<T, mem_mgr>(*this);
     }
 
 private:
-    operator X*()   const throw();
-    X& operator*()  const throw();
-    X* operator->() const throw();
-    X* get()        const throw();
+    operator T*()   const throw();
+    T& operator*()  const throw();
+    T* operator->() const throw();
+    T* get()        const throw();
 };
 
 
 //////////////////////////////////////////////////////////////////////////
 //
-//   function make_strong_ptr
+//   function make_strong_ptr group
 //
 
-template <typename T>
-strong_ptr<T, cpp_mem_mgr<T> > make_strong_ptr(void)
+template <typename T, typename mem_mgr=cpp_mem_mgr<T> >
+class make_strong_ptr
 {
-    return strong_ptr<T, cpp_mem_mgr> ( cpp_mem_mgr<T>::allocate() );
-}
-
-template <typename T, typename A1>
-strong_ptr<T, cpp_mem_mgr<T> > make_strong_ptr(A1 const &a1)
-{
-    return strong_ptr<T, cpp_mem_mgr<T> > ( cpp_mem_mgr<T>::allocate(a1) );
-}
-
-template <typename T, typename A1, typename A2>
-strong_ptr<T, cpp_mem_mgr<T> > make_strong_ptr(A1 const &a1, A2 const &a2)
-{
-    return strong_ptr<T, cpp_mem_mgr<T> > ( cpp_mem_mgr<T>::allocate(a1, a2) );
-}
-
-template <typename T, typename A1, typename A2, typename A3>
-strong_ptr<T, cpp_mem_mgr<T> > make_strong_ptr(A1 const &a1, A2 const &a2, A3 const &a3)
-{
-    return strong_ptr<T, cpp_mem_mgr<T> > ( cpp_mem_mgr<T>::allocate(a1, a2, a3) );
-}
-
-template <typename T, typename A1, typename A2, typename A3, typename A4>
-strong_ptr<T, cpp_mem_mgr<T> > make_strong_ptr(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4)
-{
-    return strong_ptr<T, cpp_mem_mgr<T> > ( cpp_mem_mgr<T>::allocate(a1, a2, a3, a4) );
-}
-
-template <typename T, typename A1, typename A2, typename A3, typename A4, typename A5>
-strong_ptr<T, cpp_mem_mgr<T> > make_strong_ptr(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4, A5 const &a5)
-{
-    return strong_ptr<T, cpp_mem_mgr<T> > ( cpp_mem_mgr<T>::allocate(a1, a2, a3, a4, a5) );
-}
-
-template <typename T, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6>
-strong_ptr<T, cpp_mem_mgr<T> > make_strong_ptr(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4, A5 const &a5, A6 const &a6)
-{
-    return strong_ptr<T, cpp_mem_mgr<T> > ( cpp_mem_mgr<T>::allocate(a1, a2, a3, a4, a5, a6) );
-}
-
-
-template<typename X>
-class cpp_arr_mem_mgr {
 public:
-    static void deallocate(X *p) { delete []p; }
-    static X * allocate(int n) { return new X[n]; }
+    typedef strong_ptr<T, mem_mgr> pointer_type;
+
+    static pointer_type generate(void)
+    {
+        return pointer_type ( mem_mgr::allocate() );
+    }
+
+    template <typename A1>
+    static pointer_type generate(A1 const &a1)
+    {
+        return pointer_type ( mem_mgr::allocate(a1) );
+    }
+
+    template <typename A1, typename A2>
+    static pointer_type generate(A1 const &a1, A2 const &a2)
+    {
+        return pointer_type ( mem_mgr::allocate(a1, a2) );
+    }
+
+    template <typename A1, typename A2, typename A3>
+    static pointer_type generate(A1 const &a1, A2 const &a2, A3 const &a3)
+    {
+        return pointer_type ( mem_mgr::allocate(a1, a2, a3) );
+    }
+
+    template <typename A1, typename A2, typename A3, typename A4>
+    static pointer_type generate(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4)
+    {
+        return pointer_type ( mem_mgr::allocate(a1, a2, a3, a4) );
+    }
+
+    template <typename A1, typename A2, typename A3, typename A4, typename A5>
+    static pointer_type generate(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4, A5 const &a5)
+    {
+        return pointer_type ( mem_mgr::allocate(a1, a2, a3, a4, a5) );
+    }
+
+    template <typename A1, typename A2, typename A3, typename A4, typename A5, typename A6>
+    static pointer_type generate(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4, A5 const &a5, A6 const &a6)
+    {
+        return pointer_type ( mem_mgr::allocate(a1, a2, a3, a4, a5, a6) );
+    }
 };
 
-template <class X, typename mem_mgr=cpp_arr_mem_mgr<X> > class strong_array : public base_ptr<X, true, mem_mgr>
-{
-    typedef typename base_ptr<X, true, mem_mgr> baseClass;
+//////////////////////////////////////////////////////////////////////////
+// COM pointer support
+//
+
+template<typename T>
+class com_mem_mgr {
 public:
-    explicit strong_array(X* p = 0) : baseClass(p)
+    static void deallocate(T *p) { p->Release(); }
+    static T * allocate(T *p) { p->AddRef(); return p; }  // we must hold the AddRef-ed pointer
+};
+
+template <typename T>
+strong_ptr<T, com_mem_mgr<T> > make_com_strong_ptr(const T *rawPtr) {
+    return make_strong_ptr<T, com_mem_mgr<T> >::generate<T*>(const_cast<T * &>(rawPtr));
+}
+
+// defining COM smart pointer type
+#ifndef DEFINE_COM_STRONG_PTR
+#define DEFINE_COM_STRONG_PTR(NAME_SPACE_T, T) typedef smart_ptr::strong_ptr<NAME_SPACE_T::T, smart_ptr::com_mem_mgr<NAME_SPACE_T::T> > T##StrongPtr;
+#endif  // DEFINE_COM_STRONG_PTR
+
+
+//////////////////////////////////////////////////////////////////////////
+// auto-released array support
+//
+
+template<typename T>
+class cpp_arr_mem_mgr {
+public:
+    static void deallocate(T *p) { delete []p; }
+    static T * allocate(int n) { return new T[n]; }
+};
+
+template <class T, typename mem_mgr=cpp_arr_mem_mgr<T> >
+class strong_array : public base_ptr<T, true, mem_mgr>
+{
+    typedef typename base_ptr<T, true, mem_mgr> baseClass;
+public:
+    explicit strong_array(T* p = 0) : baseClass(p)
     {
     }
 
@@ -408,7 +455,8 @@ public:
     {
     }
 
-    template<class Y> strong_array(const strong_array<Y, mem_mgr> &rhs) : baseClass(rhs)
+    template<class Q>
+    strong_array(const strong_array<Q, mem_mgr> &rhs) : baseClass(rhs)
     {
     }
 
@@ -416,12 +464,12 @@ public:
     {
     }
 
-    const X & operator[](int i) const
+    const T & operator[](int i) const
     {
         return get()[i];
     }
 
-    X & operator[](int i)
+    T & operator[](int i)
     {
         return get()[i];
     }
@@ -432,14 +480,15 @@ public:
         return *this;
     }
 
-    template <class Y> strong_array& operator=(const strong_array<Y, mem_mgr> &rhs)
+    template <class Q>
+    strong_array& operator=(const strong_array<Q, mem_mgr> &rhs)
     {
         baseClass::operator = (rhs);
         return *this;
     }
 private:
-    X& operator*()  const throw();
-    X* operator->() const throw();
+    T& operator*()  const throw();
+    T* operator->() const throw();
 };
 
 

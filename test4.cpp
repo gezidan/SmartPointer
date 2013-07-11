@@ -148,12 +148,12 @@ void test()
 
     int dummy = 786;
     {
-        strong_ptr<UDT> sp5 = make_strong_ptr<UDT>(dummy);
+        strong_ptr<UDT> sp5 = make_strong_ptr<UDT>::generate(dummy);
         std::cout << sp5->value() << std::endl;
     }
 
     dummy = 341;
-    strong_ptr<int> sp6 = make_strong_ptr<int>(dummy);
+    strong_ptr<int> sp6 = make_strong_ptr<int>::generate(dummy);
     std::cout << *sp6 << std::endl;
 
     std::cout << "OK\n";
@@ -187,6 +187,7 @@ void test2(void)
 
 void test4(void)
 {
+    // test the auto array.
     strong_array<int> sa1(new int[8]);
     sa1[0] = 30;
     sa1[4] = 7;

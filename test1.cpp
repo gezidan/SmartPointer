@@ -46,7 +46,7 @@ private:
 #endif // defined(WIN32)
 #endif // !CDECL
 
-int CDECL main(void)
+int test1(void)
 {
     strong_ptr<CBase> spBase(new CDevide());
 
@@ -130,5 +130,69 @@ int CDECL main(void)
         std::cout << sp1->data0 << std::endl;
     }
 
+    return 0;
+}
+
+#include <memory>
+void test2(void)
+{
+    CBase * pObj = new CDevide();
+#if 0
+    std::shared_ptr<CBase> sp1;
+    sp1 = (pObj);
+    std::weak_ptr<CBase> wsp;
+    wsp = (sp1);
+#else
+    smart_ptr::strong_ptr<CBase> sp1;
+    sp1.reset(pObj);
+    smart_ptr::weak_ptr<CDevide> wsp;
+    wsp.reset(sp1);
+
+    if (sp1 == wsp.lock()) {
+        std::cout << "Equal" <<std::endl;
+    }
+
+#endif
+}
+
+#if (defined(_WIN32) || defined(WIN32)) && defined(_MSC_VER)
+
+#import "hhctrl.ocx" raw_interfaces_only no_auto_exclude no_implementation no_smart_pointers
+#include <atlbase.h>
+
+DEFINE_COM_STRONG_PTR(HHCTRLLib, IHHCtrl);  // defining IHHCtrlStrongPtr type
+
+
+void test5(void)
+{
+    CoInitialize(NULL);
+    {
+        IHHCtrlStrongPtr spObj3;
+        CComPtr<HHCTRLLib::IHHCtrl> spObj1;
+        spObj1.CoCreateInstance(__uuidof(HHCTRLLib::HHCtrl), NULL, CLSCTX_ALL);
+        if (spObj1) {
+            IHHCtrlStrongPtr spObj2 = make_com_strong_ptr<HHCTRLLib::IHHCtrl>(spObj1);
+            spObj1.Release();       // The reference count of the COM object itself will changed from 2 to ONE(1).
+            spObj2->Print();        // using our pointer to call functions.
+            spObj3 = spObj2;        // NOTE: After this call, the reference count of the COM object itself is still ONE(1).
+        }
+        spObj3->Print();
+    }
+    CoUninitialize();
+}
+
+#else
+
+void test5(void){}
+
+#endif // _MSC_VER
+
+
+
+int CDECL main(void)
+{
+    test1();
+    test2();
+    test5();
     return 0;
 }
