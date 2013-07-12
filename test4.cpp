@@ -54,7 +54,7 @@ void test()
 {
     ASSERT( UDT_use_count == 0 );  // reality check
 
-    //  test shared_ptr with a built-in type
+    //  test strong_ptr with a built-in type
     int * ip = new int(500);
     strong_ptr<int> cp ( ip );
     ASSERT( ip == cp.get() );
@@ -119,7 +119,7 @@ void test()
 
     ASSERT( UDT_use_count == 0 );  // reality check
 
-    //  test shared_ptr with a user defined type
+    //  test strong_ptr with a user defined type
     UDT * up = new UDT;
     strong_ptr<UDT> sup ( up );
     ASSERT( up == sup.get() );
@@ -176,7 +176,7 @@ void test2(void)
 
     p1.reset(); //Memory is deleted.
 
-    strong_ptr<int> p3 = wp1.lock(); //Memory is gone, so we get an empty shared_ptr.
+    strong_ptr<int> p3 = wp1.lock(); //Memory is gone, so we get an empty strong_ptr.
     if (p3) {
         //Will not execute this.
         std::cout << *p3 << std::endl;

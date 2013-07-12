@@ -17,10 +17,11 @@ _Ralph Shane_ (free2000fly at gmail dot com)
 
 本實現不是“多綫程安全”的，用戶必須自己處理多綫程環境的各種加鎖和解鎖工作。
 
+
 實現細節
 ==========================
 
-1. 簡單的類 `ref_count` 用於實現對“強”引用計數和“弱”引用計數的操作。
+1.  簡單的類 `ref_count` 用於實現對“強”引用計數和“弱”引用計數的操作。
 
 2.  基類 `base_ptr` 實現了強指針和弱指針的絕大部分邏輯，這個類是強指針和弱指針共同的基類。有兩個成員變量，`ref_count` 對象實體指針 `m_counter` 和 raw 物件指針。這個類的關鍵點有四: 
 
@@ -35,24 +36,13 @@ _Ralph Shane_ (free2000fly at gmail dot com)
 3.  `strong_ptr` 類基本上就是轉發 `base_ptr` 基類的操作。`weak_ptr` 類與 `strong_ptr` 類似，主要不同點就是將對 raw 物件指針的直接操作屏蔽掉。
 
 
-關於 `make_strong_ptr` 函數
+支持微軟 COM 指針
 ==========================
 
-除了 vs2010/vs2012 外，其它編譯器不支持形如
+通過專門實現的内存管理器 com_mem_mgr 模版類可以實現對 COM 指針的封裝, 該封裝對 COM 指針自身的引用計數只是在首次持有時增加 1, 在最終釋放時減 1, 中間其餘時間的操作只是通過類 strong_ptr 的引用計數來維護。
 
-    template <typename T, typename A1>
-    strong_ptr<T> make_strong_ptr(A1 &&a1)
-    {
-        return strong_ptr<T> ( new T(a1) );
-    }
+爲了避免我們在使用 strong_ptr 時錯誤地調用了 COM 指針的函數 AddRef 和 Release, 特意提供 _NoAddRefReleaseOnComPtr 類以阻止這種事情的發生。
 
-的語法，被迫改成形如以下的樣子，這樣一來函數 `make_strong_ptr` 就不再支持常數形式的傳入參數
-
-    template <typename T, typename A1>
-    strong_ptr<T> make_strong_ptr(A1 const &a1)
-    {
-        return strong_ptr<T> ( new T(a1) );
-    }
 
 
 測試平臺
@@ -63,6 +53,6 @@ _Ralph Shane_ (free2000fly at gmail dot com)
     Visual Studio 2003/2005/2008/2010/2012
 
 未通過
-    
+
     Visual Studio 6
 

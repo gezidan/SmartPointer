@@ -5,6 +5,20 @@
 * 
 * The is a non-intrusive implementation that allocates an additional
 * int and pointer for every counted object.
+*
+* Permission to use, copy, modify, and/or distribute this software for
+* any purpose with or without fee is hereby granted, provided that the
+* above copyright notice and this permission notice appear in all
+* copies.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+* WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+* WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+* AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+* DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+* PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+* TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+* PERFORMANCE OF THIS SOFTWARE.
 */
 
 #ifndef __SMART_PTR_H__
@@ -77,6 +91,13 @@ private:
     int m_weak_ref_count;
 }; 
 
+#if defined(WIN32) || defined(_WIN32)
+template <class T> class _NoAddRefReleaseOnComPtr : public T {
+private:
+    virtual unsigned long __stdcall AddRef(void) = 0;
+    virtual unsigned long __stdcall Release(void) = 0;
+};
+#endif  // defined(WIN32) || defined(_WIN32)
 
 // base class for strong_ptr and weak_ptr
 template<class T, bool is_strong, typename mem_mgr>
@@ -111,7 +132,11 @@ public:
 
     operator T*()   const throw()   { return m_ptr; }
     T& operator*()  const throw()   { return *m_ptr; }
+#if defined(WIN32) || defined(_WIN32)
+    _NoAddRefReleaseOnComPtr<T>* operator->() const throw() { return (_NoAddRefReleaseOnComPtr<T>*)m_ptr; }
+#else
     T* operator->() const throw()   { return m_ptr; }
+#endif  // defined(WIN32) || defined(_WIN32)
     T* get()        const throw()   { return m_ptr; }
 
     bool unique() const throw()
@@ -223,7 +248,7 @@ bool operator<(const base_ptr<T, bx, mem_mgr1> &lhs, const base_ptr<Q, by, mem_m
 template <class T, typename mem_mgr> class weak_ptr;
 
 template<typename T>
-class cpp_mem_mgr {
+class std_mem_mgr {
 public:
     static void deallocate(T *p) { delete p; }
     static T * allocate(void) { return new T(); }
@@ -235,7 +260,7 @@ public:
     template<typename A1, typename A2, typename A3, typename A4, typename A5, typename A6> static T * allocate(A1 const &a1, A2 const &a2, A3 const &a3, A4 const &a4, A5 const &a5, A6 const &a6) { return new T(a1, a2, a3, a4, a5, a6); }
 };
 
-template <class T, typename mem_mgr=cpp_mem_mgr<T> >
+template <class T, typename mem_mgr=std_mem_mgr<T> >
 class strong_ptr : public base_ptr<T, true, mem_mgr>
 {
     typedef base_ptr<T, true, mem_mgr> baseClass;
@@ -285,7 +310,7 @@ public:
 };
 
 
-template <class T, typename mem_mgr=cpp_mem_mgr<T> >
+template <class T, typename mem_mgr=std_mem_mgr<T> >
 class weak_ptr : public base_ptr<T, false, mem_mgr>
 {
     typedef base_ptr<T, false, mem_mgr> baseClass;
@@ -361,7 +386,7 @@ private:
 //   function make_strong_ptr group
 //
 
-template <typename T, typename mem_mgr=cpp_mem_mgr<T> >
+template <typename T, typename mem_mgr=std_mem_mgr<T> >
 class make_strong_ptr
 {
 public:
@@ -425,24 +450,19 @@ strong_ptr<T, com_mem_mgr<T> > make_com_strong_ptr(const T *rawPtr) {
     return make_strong_ptr<T, com_mem_mgr<T> >::generate<T*>(const_cast<T * &>(rawPtr));
 }
 
-// defining COM smart pointer type
-#ifndef DEFINE_COM_STRONG_PTR
-#define DEFINE_COM_STRONG_PTR(NAME_SPACE_T, T) typedef smart_ptr::strong_ptr<NAME_SPACE_T::T, smart_ptr::com_mem_mgr<NAME_SPACE_T::T> > T##StrongPtr;
-#endif  // DEFINE_COM_STRONG_PTR
-
 
 //////////////////////////////////////////////////////////////////////////
 // auto-released array support
 //
 
 template<typename T>
-class cpp_arr_mem_mgr {
+class array_mem_mgr {
 public:
     static void deallocate(T *p) { delete []p; }
     static T * allocate(int n) { return new T[n]; }
 };
 
-template <class T, typename mem_mgr=cpp_arr_mem_mgr<T> >
+template <class T, typename mem_mgr=array_mem_mgr<T> >
 class strong_array : public base_ptr<T, true, mem_mgr>
 {
     typedef typename base_ptr<T, true, mem_mgr> baseClass;
@@ -490,6 +510,32 @@ private:
     T& operator*()  const throw();
     T* operator->() const throw();
 };
+
+
+//////////////////////////////////////////////////////////////////////////
+// define macros
+
+#ifndef EMPTY_NAME_SPACE
+#define EMPTY_NAME_SPACE
+#endif  // EMPTY_NAME_SPACE
+
+// defining COM smart pointer type
+#ifndef DEFINE_COM_STRONG_PTR
+#define DEFINE_COM_STRONG_PTR(NAME_SPACE_T, TYPE) \
+    typedef smart_ptr::strong_ptr<NAME_SPACE_T::TYPE, smart_ptr::com_mem_mgr<NAME_SPACE_T::TYPE> > TYPE##ComPtr;
+#endif  // DEFINE_COM_STRONG_PTR
+
+// defining COM smart pointer type
+#ifndef DEFINE_STD_STRONG_PTR
+#define DEFINE_STD_STRONG_PTR(NAME_SPACE_T, TYPE) \
+    typedef smart_ptr::strong_ptr<NAME_SPACE_T::TYPE, smart_ptr::std_mem_mgr<NAME_SPACE_T::TYPE> > TYPE##StdPtr;
+#endif  // DEFINE_COM_STRONG_PTR
+
+// defining COM smart pointer type
+#ifndef DEFINE_ARR_STRONG_PTR
+#define DEFINE_ARR_STRONG_PTR(NAME_SPACE_T, TYPE) \
+    typedef smart_ptr::strong_ptr<NAME_SPACE_T::TYPE, smart_ptr::array_mem_mgr<NAME_SPACE_T::TYPE> > TYPE##ArrPtr;
+#endif  // DEFINE_COM_STRONG_PTR
 
 
 }; // namespace smart_ptr

@@ -167,16 +167,30 @@ void test5(void)
 {
     CoInitialize(NULL);
     {
-        IHHCtrlStrongPtr spObj3;
-        CComPtr<HHCTRLLib::IHHCtrl> spObj1;
-        spObj1.CoCreateInstance(__uuidof(HHCTRLLib::HHCtrl), NULL, CLSCTX_ALL);
-        if (spObj1) {
-            IHHCtrlStrongPtr spObj2 = make_com_strong_ptr<HHCTRLLib::IHHCtrl>(spObj1);
-            spObj1.Release();       // The reference count of the COM object itself will changed from 2 to ONE(1).
-            spObj2->Print();        // using our pointer to call functions.
-            spObj3 = spObj2;        // NOTE: After this call, the reference count of the COM object itself is still ONE(1).
+        IHHCtrlComPtr spOuter;
+        HHCTRLLib::IHHCtrl *rawPtr = NULL;
+        ::CoCreateInstance(__uuidof(HHCTRLLib::HHCtrl), NULL, CLSCTX_ALL, __uuidof(HHCTRLLib::IHHCtrl), (void**)&rawPtr);
+        if (rawPtr) {
+            // we must using make_com_strong_ptr call to create a IHHCtrlComPtr type pointer.
+            IHHCtrlComPtr spInner = make_com_strong_ptr<HHCTRLLib::IHHCtrl>(rawPtr);
+
+            // Release the raw pointer.
+            // The reference count of the COM object itself will changed from 2 to ONE(1).
+            rawPtr->Release();
+            rawPtr = NULL;
+
+            // using our pointer to call functions.
+            spInner->Print();
+
+            // NOTE: After this call, the reference count of the COM object itself is still ONE(1).
+            spOuter = spInner;
+
+            // work with ATL::CComPtr class
+            CComPtr<HHCTRLLib::IHHCtrl> spC2(spOuter);
+            spC2->Print();
         }
-        spObj3->Print();
+        spOuter->Print();
+        //spOuter->Release();   // this line will cause compiling error.
     }
     CoUninitialize();
 }
